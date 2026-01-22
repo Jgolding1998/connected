@@ -109,6 +109,12 @@ main {
   position: relative;
 }
 
+/* Leaflet map container occupies full size of map-container */
+#map {
+  width: 100%;
+  height: 100%;
+}
+
 /* Static world map image */
 #worldMapImage {
   width: 100%;
@@ -206,7 +212,7 @@ main {
   color: var(--text-light);
 }
 
-event-card h4 {
+.event-card h4 {
   margin: 0 0 0.3rem 0;
   font-size: 1.1rem;
   color: var(--primary);
