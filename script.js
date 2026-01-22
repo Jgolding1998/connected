@@ -1,4 +1,4 @@
-script.js/*
+/*
  * Connected App Script
  *
  * This script powers the interactive behaviour of the Connected website.
@@ -10,6 +10,8 @@ script.js/*
  */
 
 // Default sample events used if no events are stored in localStorage
+// Add some amusing, fictional events related to "Skyler" for demonstration purposes.
+// These events will appear by default if the user hasn't created any yet.
 const defaultEvents = [
   {
     id: 1,
@@ -89,9 +91,6 @@ const defaultEvents = [
     privacy: 'public',
     creator: 'Jane Doe'
   }
-];
-
-// 
   ,
   // Fun "Skyler" themed events for the Connected platform
   {
@@ -129,7 +128,10 @@ const defaultEvents = [
     image: 'https://images.pexels.com/photos/534064/pexels-photo-534064.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
     creator: 'Jane Doe'
-  }Retrieve events from localStorage or fall back to defaults
+  }
+];
+
+// Retrieve events from localStorage or fall back to defaults
 let events = [];
 function loadEvents() {
   try {
@@ -177,6 +179,12 @@ let calendar;
 // Current selected location for radius filtering (default: Columbia, Missouri)
 let currentLocation = { lat: 38.9517, lon: -92.3341 };
 
+// Global map and layers used by Leaflet
+let map;
+let markerLayer;
+let centerMarker;
+let radiusLayer;
+
 // Convert latitude and longitude to pixel coordinates on the map image
 function latLonToPixel(lat, lon, width, height) {
   const x = ((lon + 180) / 360) * width;
@@ -191,68 +199,91 @@ function pixelToLatLon(x, y, width, height) {
   return { lat, lon };
 }
 
-// Initialize the static map and set up event listeners
+// Initialize the interactive Leaflet map and set up event listeners
 function initMap() {
   const mapContainer = document.getElementById('map');
-  // Click on the map to set a new center location for radius filtering
-  mapContainer.addEventListener('click', event => {
-    const rect = mapContainer.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const { lat, lon } = pixelToLatLon(x, y, rect.width, rect.height);
-    currentLocation = { lat, lon };
-    // Recompute markers based on new center if radius is specified
+  // Remove any leftover static image in the container if present
+  const staticImg = document.getElementById('worldMapImage');
+  if (staticImg) {
+    staticImg.remove();
+  }
+  // Create the Leaflet map centered at the current location with a world view
+  map = L.map(mapContainer).setView([currentLocation.lat, currentLocation.lon], 2);
+  // Add a dark tile layer (CartoDB dark matter)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18,
+    attribution:
+      '&copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
+  }).addTo(map);
+  // Handle click on the map to update the selected location and filter events
+  map.on('click', e => {
+    currentLocation = { lat: e.latlng.lat, lon: e.latlng.lng };
     const radius = parseFloat(document.getElementById('radiusInput').value) || 100;
-    const filtered = events.filter(e => {
-      return haversineDistance(currentLocation.lat, currentLocation.lon, e.lat, e.lon) <= radius;
+    const filtered = events.filter(ev => {
+      return (
+        haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
+        radius
+      );
     });
     updateMap(filtered);
     renderList(filtered);
     updateCalendar(filtered);
   });
-  // Filter events by radius when button clicked
-  document
-    .getElementById('filterRadiusBtn')
-    .addEventListener('click', () => {
-      const radius = parseFloat(document.getElementById('radiusInput').value) || 100;
-      const filtered = events.filter(e => {
-        return haversineDistance(currentLocation.lat, currentLocation.lon, e.lat, e.lon) <= radius;
-      });
-      updateMap(filtered);
-      renderList(filtered);
-      updateCalendar(filtered);
+  // Set up the radius filter button
+  document.getElementById('filterRadiusBtn').addEventListener('click', () => {
+    const radius = parseFloat(document.getElementById('radiusInput').value) || 100;
+    const filtered = events.filter(ev => {
+      return (
+        haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
+        radius
+      );
     });
-  // Draw markers initially without filtering
+    updateMap(filtered);
+    renderList(filtered);
+    updateCalendar(filtered);
+  });
+  // Draw initial markers
   updateMap();
 }
 
-// Place markers on the static map based on the provided events
+// Place markers on the interactive map based on the provided events
 function updateMap(eventList = events) {
-  const mapContainer = document.getElementById('map');
-  // Remove existing markers
-  mapContainer.querySelectorAll('.map-marker, .center-marker').forEach(el => el.remove());
-  const rect = mapContainer.getBoundingClientRect();
-  const width = rect.width;
-  const height = rect.height;
-  // Draw event markers
-  eventList.forEach(e => {
-    const { x, y } = latLonToPixel(e.lat, e.lon, width, height);
-    const marker = document.createElement('div');
-    marker.className = 'map-marker';
-    marker.style.left = `${x}px`;
-    marker.style.top = `${y}px`;
-    marker.title = `${e.title} | ${new Date(e.date).toLocaleString()} | ${e.city}`;
-    mapContainer.appendChild(marker);
-  });
-  // Draw current location marker
-  if (currentLocation) {
-    const { x, y } = latLonToPixel(currentLocation.lat, currentLocation.lon, width, height);
-    const centerMarker = document.createElement('div');
-    centerMarker.className = 'center-marker';
-    centerMarker.style.left = `${x}px`;
-    centerMarker.style.top = `${y}px`;
-    mapContainer.appendChild(centerMarker);
+  // Ensure the map is initialised
+  if (!map) return;
+  // Remove existing marker layer and radius indicators
+  if (markerLayer) {
+    markerLayer.remove();
   }
+  if (centerMarker) {
+    centerMarker.remove();
+  }
+  if (radiusLayer) {
+    radiusLayer.remove();
+  }
+  // Create a new marker layer
+  markerLayer = L.layerGroup().addTo(map);
+  // Add a marker for the current selected location
+  centerMarker = L.circleMarker([currentLocation.lat, currentLocation.lon], {
+    radius: 8,
+    color: '#00a9c4',
+    fillColor: '#0b3556',
+    fillOpacity: 1
+  }).addTo(map);
+  // Draw radius circle to visualise the filter range
+  const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
+  const radiusMeters = radiusMiles * 1609.34;
+  radiusLayer = L.circle([currentLocation.lat, currentLocation.lon], {
+    radius: radiusMeters,
+    color: '#5e84c8',
+    fill: false
+  }).addTo(map);
+  // Add event markers with popups
+  eventList.forEach(ev => {
+    const marker = L.marker([ev.lat, ev.lon]).addTo(markerLayer);
+    marker.bindPopup(
+      `<strong>${ev.title}</strong><br>${new Date(ev.date).toLocaleString()}<br>${ev.city}`
+    );
+  });
 }
 
 // Initialize the FullCalendar and populate events
@@ -509,24 +540,28 @@ function initChat() {
 
 // Entry point: load events and initialise everything
 document.addEventListener('DOMContentLoaded', () => {
+  // Load any stored events or fall back to defaults
   loadEvents();
+  // Initialise the static map so markers can be drawn
   initMap();
-  
-      try {
-        initCalendar();
-    } catch (error) {
-        console.error('Failed to initialize calendar', error);
-    }
-  
+  // Initialise the calendar inside a try/catch block. If the FullCalendar
+  // library fails to load for any reason, we still want the rest of the
+  // application (navigation, list view, map, add events, etc.) to work.
+  try {
+    initCalendar();
+  } catch (err) {
+    console.error('Calendar initialisation failed:', err);
+  }
+  // Render the initial list and profile/reels
+  renderList();
   renderProfile();
   renderReels();
+  // Set up navigation so that clicking nav links switches views
   setupNavigation();
+  // Initialise the chat interface
   initChat();
-  // Attach add event handler
-  document
-    .getElementById('addEventForm')
-    .addEventListener('submit', handleAddEvent);
-
-  // Set default view to map view and highlight nav link
+  // Attach the add event form handler
+  document.getElementById('addEventForm').addEventListener('submit', handleAddEvent);
+  // Set the default view to the map view and highlight the corresponding nav link
   switchView('mapView');
 });
