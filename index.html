@@ -12,6 +12,8 @@
   />
   <!-- App main styles -->
   <link rel="stylesheet" href="style.css" />
+  
+  
 </head>
 <body>
   <!-- Header with navigation -->
@@ -40,23 +42,24 @@
     <section id="mapView" class="view active">
       <h2>Events on the Map</h2>
       <div class="controls">
-        <label>
+        
           Radius (miles):
           <input type="number" id="radiusInput" value="100" min="1" max="10000" />
         </label>
+        
         <button id="filterRadiusBtn">Filter</button>
       </div>
       <div id="map" class="map-container">
         <!-- Static world map for offline use -->
         <!-- Use a remote low-resolution world map hosted by Wikimedia Commons. This avoids bundling large image files -->
-        <img id="worldMapImage" src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="World Map" />
+        
       </div>
     </section>
 
     <!-- List view -->
     <section id="listView" class="view">
       <h2>Event List</h2>
-      <div id="eventList" class="event-list"></div>
+      <d
     </section>
 
     <!-- Calendar view -->
