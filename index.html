@@ -10,10 +10,16 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
   />
+  <!-- Leaflet CSS for interactive map -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha512-m6CZGtH0htPdvIdTOfLI1aaBhpcGl9vt8zw2fTdHrXaHOnbn4iOjdRJ02EzuO4YoQfpEZyavJ4wk3E5fWGjAUg=="
+    crossorigin=""
+  />
+
   <!-- App main styles -->
   <link rel="stylesheet" href="style.css" />
-  
-  
 </head>
 <body>
   <!-- Header with navigation -->
@@ -42,24 +48,21 @@
     <section id="mapView" class="view active">
       <h2>Events on the Map</h2>
       <div class="controls">
-        
+        <label>
           Radius (miles):
           <input type="number" id="radiusInput" value="100" min="1" max="10000" />
         </label>
-        
         <button id="filterRadiusBtn">Filter</button>
       </div>
       <div id="map" class="map-container">
-        <!-- Static world map for offline use -->
-        <!-- Use a remote low-resolution world map hosted by Wikimedia Commons. This avoids bundling large image files -->
-        
+        <!-- Leaflet will populate this container with an interactive map -->
       </div>
     </section>
 
     <!-- List view -->
     <section id="listView" class="view">
       <h2>Event List</h2>
-      <d
+      <div id="eventList" class="event-list"></div>
     </section>
 
     <!-- Calendar view -->
@@ -148,6 +151,12 @@
 
   <!-- External JS libraries -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- Leaflet JS for interactive map -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha512-o9N1jSg9D1aKBGsKaXE+vSN0AsubOVFFG8EwM7DssgKklfB4Ub7ryYdEq4EOGksh59z9ZjjN9cG0Ci3fYvQ9IQ=="
+    crossorigin=""
+  ></script>
   <!-- App script -->
   <script src="script.js"></script>
 </body>
