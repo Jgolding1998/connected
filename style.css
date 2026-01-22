@@ -1,0 +1,443 @@
+/* General styles */
+* {
+  box-sizing: border-box;
+}
+
+/* Color palette variables for easy theme management */
+:root {
+  --primary: #00a9c4;
+  --secondary: #0b3556;
+  --accent: #5e84c8;
+  --bg-dark: #0e1a2b;
+  --card-bg: #142b44;
+  --card-border: #1f3e6b;
+  --text-light: #eaecef;
+  --text-muted: #8fa9c9;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+header {
+  background: linear-gradient(to right, var(--secondary), var(--primary));
+  color: var(--text-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Branding (logo + text) */
+.branding {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+nav a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--primary);
+}
+
+nav a.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+main {
+  padding: 1rem;
+}
+
+.view {
+  display: none;
+  margin-top: 1rem;
+}
+
+.view.active {
+  display: block;
+}
+
+/* Map view */
+/* Map view */
+.map-container {
+  width: 100%;
+  height: 500px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+/* Static world map image */
+#worldMapImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Event markers over map */
+.map-marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--text-light);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+/* Marker representing the selected center location */
+.center-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--secondary);
+  border: 3px solid var(--primary);
+  transform: translate(-50%, -50%);
+}
+
+ .controls {
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+ }
+
+ .controls input[type="number"] {
+  width: 100px;
+  padding: 0.3rem;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  color: var(--text-light);
+ }
+
+/* Buttons inside controls */
+.controls button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.controls button:hover {
+  background: var(--secondary);
+}
+
+/* Event list */
+.event-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.event-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.event-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.event-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.event-card .card-content {
+  padding: 0.8rem;
+  flex-grow: 1;
+  color: var(--text-light);
+}
+
+event-card h4 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
+.event-card p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.event-card .event-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+/* Calendar */
+#calendar {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  padding: 1rem;
+  color: var(--text-light);
+}
+
+/* Dark theme overrides for FullCalendar */
+.fc {
+  color: var(--text-light);
+  background: transparent;
+}
+
+.fc-theme-standard .fc-scrollgrid,
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: var(--card-border);
+}
+
+.fc .fc-toolbar-title {
+  color: var(--text-light);
+}
+
+.fc .fc-button {
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  margin: 0 2px;
+  cursor: pointer;
+}
+
+.fc .fc-button:hover,
+.fc .fc-button:focus {
+  background: var(--secondary);
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell {
+  color: var(--text-light);
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fc .fc-daygrid-event {
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+/* Form styles */
+form {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  color: var(--text-light);
+}
+
+.form-group {
+  margin-bottom: 0.8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 0.6rem;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background: var(--bg-dark);
+  color: var(--text-light);
+}
+
+.form-group button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.form-group button:hover {
+  background: var(--secondary);
+}
+
+/* Chat */
+.chat-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  padding: 0.8rem;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.chat-input {
+  display: flex;
+  padding: 0.8rem;
+  gap: 0.5rem;
+  background: var(--bg-dark);
+}
+
+.chat-input input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: var(--bg-dark);
+  color: var(--text-light);
+}
+
+.chat-input button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-input button:hover {
+  background: var(--secondary);
+}
+
+.message {
+  margin-bottom: 0.6rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.message.sent {
+  background: var(--primary);
+  color: #fff;
+  align-self: flex-end;
+}
+
+.message.received {
+  background: var(--card-border);
+  color: var(--text-light);
+  align-self: flex-start;
+}
+
+/* Profile */
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.profile-info {
+  text-align: center;
+}
+
+.profile-info .avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+
+.reels-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.reels-gallery img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.user-events-section .event-list {
+  gap: 1rem;
+}
