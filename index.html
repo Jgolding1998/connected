@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connected – Find & Share Events</title>
+  <!-- External libraries -->
+  <!-- FullCalendar CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
+  />
+  <!-- App main styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header with navigation -->
+  <header>
+    <div class="branding">
+      <!-- Updated brand name and alt text from "Get Connected" to "Connected" -->
+      <!-- Embed logo directly via data URI to avoid needing a separate image file.  -->
+      <img src="data:image/png;base64,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" alt="Connected Logo" class="logo-img" />
+      <span class="logo-text">Connected</span>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#" data-view="mapView">Map View</a></li>
+        <li><a href="#" data-view="listView">List View</a></li>
+        <li><a href="#" data-view="calendarView">Calendar</a></li>
+        <li><a href="#" data-view="addEventView">Add Event</a></li>
+        <li><a href="#" data-view="messagesView">Messages</a></li>
+        <li><a href="#" data-view="profileView">Profile & Reels</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main content areas (each view is in a section) -->
+  <main>
+    <!-- Map view -->
+    <section id="mapView" class="view active">
+      <h2>Events on the Map</h2>
+      <div class="controls">
+        <label>
+          Radius (miles):
+          <input type="number" id="radiusInput" value="100" min="1" max="10000" />
+        </label>
+        <button id="filterRadiusBtn">Filter</button>
+      </div>
+      <div id="map" class="map-container">
+        <!-- Static world map for offline use -->
+        <!-- Use a remote low-resolution world map hosted by Wikimedia Commons. This avoids bundling large image files -->
+        <img id="worldMapImage" src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="World Map" />
+      </div>
+    </section>
+
+    <!-- List view -->
+    <section id="listView" class="view">
+      <h2>Event List</h2>
+      <div id="eventList" class="event-list"></div>
+    </section>
+
+    <!-- Calendar view -->
+    <section id="calendarView" class="view">
+      <h2>Calendar</h2>
+      <div id="calendar"></div>
+    </section>
+
+    <!-- Add event view -->
+    <section id="addEventView" class="view">
+      <h2>Create an Event</h2>
+      <form id="addEventForm">
+        <div class="form-group">
+          <label for="eventTitle">Event Name:</label>
+          <input type="text" id="eventTitle" required />
+        </div>
+        <div class="form-group">
+          <label for="eventDescription">Description:</label>
+          <textarea id="eventDescription" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="eventDate">Date &amp; Time:</label>
+          <input type="datetime-local" id="eventDate" required />
+        </div>
+        <div class="form-group">
+          <label for="eventLatitude">Latitude:</label>
+          <input type="number" step="any" id="eventLatitude" required />
+        </div>
+        <div class="form-group">
+          <label for="eventLongitude">Longitude:</label>
+          <input type="number" step="any" id="eventLongitude" required />
+        </div>
+        <div class="form-group">
+          <label for="eventCity">City:</label>
+          <input type="text" id="eventCity" required />
+        </div>
+        <div class="form-group">
+          <label for="eventImage">Image URL:</label>
+          <input type="url" id="eventImage" placeholder="https://example.com/image.jpg" />
+        </div>
+        <div class="form-group">
+          <label for="eventPrivacy">Privacy:</label>
+          <select id="eventPrivacy">
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="submit">Add Event</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Messages view -->
+    <section id="messagesView" class="view">
+      <h2>Messages</h2>
+      <div id="chatContainer" class="chat-container">
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-input">
+          <input type="text" id="messageInput" placeholder="Type a message..." />
+          <button id="sendMessageBtn">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile and reels view -->
+    <section id="profileView" class="view">
+      <h2>Your Profile &amp; Reels</h2>
+      <div class="profile-container">
+        <div class="profile-info">
+          <img id="profileAvatar" class="avatar" src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="User Avatar" />
+          <h3 id="profileName">Jane Doe</h3>
+          <p id="profileBio">Welcome to Connected! This is your profile page where you can see your events and reels.</p>
+        </div>
+        <div class="reels-section">
+          <h3>Reels</h3>
+          <div id="reelsGallery" class="reels-gallery"></div>
+        </div>
+        <div class="user-events-section">
+          <h3>Your Events</h3>
+          <div id="userEvents" class="event-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- External JS libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- App script -->
+  <script src="script.js"></script>
+</body>
+</html>
