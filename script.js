@@ -91,7 +91,45 @@ const defaultEvents = [
   }
 ];
 
-// Retrieve events from localStorage or fall back to defaults
+// 
+  ,
+  // Fun "Skyler" themed events for the Connected platform
+  {
+    id: 7,
+    title: 'Celebrating Skyler Party',
+    description: 'Join us for a light‑hearted celebration of Skyler with music, cake and games!',
+    date: '2026-06-15T18:00',
+    lat: 38.9517, // Columbia, Missouri
+    lon: -92.3341,
+    city: 'Columbia',
+    image: 'https://images.pexels.com/photos/207962/pexels-photo-207962.jpeg?auto=compress&cs=tinysrgb&w=800',
+    privacy: 'public',
+    creator: 'Jane Doe'
+  },
+  {
+    id: 8,
+    title: 'Skyler Trivia Night',
+    description: 'Test your knowledge about all things Skyler in this quirky trivia competition — prizes included!',
+    date: '2026-07-10T19:00',
+    lat: 38.9517,
+    lon: -92.3341,
+    city: 'Columbia',
+    image: 'https://images.pexels.com/photos/716411/pexels-photo-716411.jpeg?auto=compress&cs=tinysrgb&w=800',
+    privacy: 'public',
+    creator: 'Jane Doe'
+  },
+  {
+    id: 9,
+    title: 'Skyler Charity Auction',
+    description: 'Bid on Skyler’s prized possessions to raise money for charity — all in good fun!',
+    date: '2026-08-05T17:00',
+    lat: 38.9517,
+    lon: -92.3341,
+    city: 'Columbia',
+    image: 'https://images.pexels.com/photos/534064/pexels-photo-534064.jpeg?auto=compress&cs=tinysrgb&w=800',
+    privacy: 'public',
+    creator: 'Jane Doe'
+  }Retrieve events from localStorage or fall back to defaults
 let events = [];
 function loadEvents() {
   try {
@@ -473,8 +511,13 @@ function initChat() {
 document.addEventListener('DOMContentLoaded', () => {
   loadEvents();
   initMap();
-  initCalendar();
-  renderList();
+  
+      try {
+        initCalendar();
+    } catch (error) {
+        console.error('Failed to initialize calendar', error);
+    }
+  
   renderProfile();
   renderReels();
   setupNavigation();
