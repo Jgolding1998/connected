@@ -10,6 +10,13 @@
  */
 
 // Default sample events used if no events are stored in localStorage
+// Define a default set of reel images to associate with events. Each event
+// will use a copy of this array to avoid referencing the same array object.
+const defaultEventReels = [
+  'https://images.pexels.com/photos/3157506/pexels-photo-3157506.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/211356/pexels-photo-211356.jpeg?auto=compress&cs=tinysrgb&w=800',
+  'https://images.pexels.com/photos/206410/pexels-photo-206410.jpeg?auto=compress&cs=tinysrgb&w=800'
+];
 // Add some amusing, fictional events related to "Skyler" for demonstration purposes.
 // These events will appear by default if the user hasn't created any yet.
 const defaultEvents = [
@@ -24,7 +31,8 @@ const defaultEvents = [
     image:
       'https://images.pexels.com/photos/313707/pexels-photo-313707.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 2,
@@ -37,7 +45,8 @@ const defaultEvents = [
     image:
       'https://images.pexels.com/photos/2480708/pexels-photo-2480708.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 3,
@@ -50,7 +59,8 @@ const defaultEvents = [
     image:
       'https://images.pexels.com/photos/460672/pexels-photo-460672.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 4,
@@ -63,7 +73,8 @@ const defaultEvents = [
     image:
       'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 5,
@@ -76,7 +87,8 @@ const defaultEvents = [
     image:
       'https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 6,
@@ -89,7 +101,8 @@ const defaultEvents = [
     image:
       'https://images.pexels.com/photos/356830/pexels-photo-356830.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   }
   ,
   // Fun "Skyler" themed events for the Connected platform
@@ -103,7 +116,8 @@ const defaultEvents = [
     city: 'Columbia',
     image: 'https://images.pexels.com/photos/207962/pexels-photo-207962.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 8,
@@ -115,7 +129,8 @@ const defaultEvents = [
     city: 'Columbia',
     image: 'https://images.pexels.com/photos/716411/pexels-photo-716411.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   },
   {
     id: 9,
@@ -127,7 +142,8 @@ const defaultEvents = [
     city: 'Columbia',
     image: 'https://images.pexels.com/photos/534064/pexels-photo-534064.jpeg?auto=compress&cs=tinysrgb&w=800',
     privacy: 'public',
-    creator: 'Jane Doe'
+    creator: 'Jane Doe',
+    reels: [...defaultEventReels]
   }
 ];
 
@@ -408,12 +424,15 @@ function createEventMarker(x, y, ev) {
   marker.style.left = `${x}px`;
   marker.style.top = `${y}px`;
   marker.title = `${ev.title} - ${new Date(ev.date).toLocaleString()}`;
-  marker.addEventListener('click', () => {
-    alert(
-      `${ev.title}\n\n${ev.description}\nLocation: ${ev.city}\nDate: ${new Date(
-        ev.date
-      ).toLocaleString()}`
-    );
+  // Enable pointer events on the marker so clicks register even though the
+  // overlay container disables pointer events. Without this, clicks on
+  // markers would be ignored.
+  marker.style.pointerEvents = 'auto';
+  marker.addEventListener('click', e => {
+    // Prevent the click from propagating to the map container, which would
+    // update the current location.
+    e.stopPropagation();
+    showEventModal(ev);
   });
   markerLayerDiv.appendChild(marker);
 }
@@ -446,11 +465,15 @@ function initCalendar() {
       extendedProps: { description: e.description, city: e.city }
     })),
     eventClick: info => {
-      const { title } = info.event;
-      const { description, city } = info.event.extendedProps;
-      alert(`${title}\n\n${description}\nLocation: ${city}\nDate: ${new Date(
-        info.event.start
-      ).toLocaleString()}`);
+      // On calendar event click, find the full event object by its id and
+      // open the event modal with details and reels. Use preventDefault to
+      // avoid navigation.
+      info.jsEvent.preventDefault();
+      const id = parseInt(info.event.id, 10);
+      const ev = events.find(e => e.id === id);
+      if (ev) {
+        showEventModal(ev);
+      }
     }
   });
   calendar.render();
@@ -499,6 +522,8 @@ function renderList(eventList = events) {
     content.appendChild(desc);
     card.appendChild(content);
     container.appendChild(card);
+    // Make clicking a card open the event modal with details and reels
+    card.addEventListener('click', () => showEventModal(e));
   });
 }
 
@@ -549,6 +574,43 @@ function renderReels() {
     img.alt = 'Reel image';
     gallery.appendChild(img);
   });
+}
+
+// Display event details and associated reels in a modal overlay. If an event
+// does not specify reels, fall back to the defaultEventReels defined at the
+// top of this file. The modal contains elements for title, date/location,
+// description, and a reels gallery.
+function showEventModal(ev) {
+  const modal = document.getElementById('eventModal');
+  if (!modal) return;
+  const titleEl = modal.querySelector('#modalTitle');
+  const metaEl = modal.querySelector('#modalMeta');
+  const descEl = modal.querySelector('#modalDesc');
+  const reelsContainer = modal.querySelector('#modalReels');
+  // Populate modal text content
+  if (titleEl) titleEl.textContent = ev.title;
+  if (metaEl) metaEl.textContent = `${new Date(ev.date).toLocaleString()} • ${ev.city}`;
+  if (descEl) descEl.textContent = ev.description;
+  // Clear any existing reel images
+  if (reelsContainer) reelsContainer.innerHTML = '';
+  // Choose reels: use event-specific reels if present, else fallback
+  const reels = Array.isArray(ev.reels) && ev.reels.length > 0 ? ev.reels : defaultEventReels;
+  reels.forEach(src => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `${ev.title} reel`;
+    reelsContainer.appendChild(img);
+  });
+  // Show the modal
+  modal.classList.add('active');
+}
+
+// Close and hide the event modal
+function closeEventModal() {
+  const modal = document.getElementById('eventModal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
 }
 
 // Setup navigation to switch between views
@@ -719,4 +781,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addEventForm').addEventListener('submit', handleAddEvent);
   // Set the default view to the map view and highlight the corresponding nav link
   switchView('mapView');
+
+  // Set up modal close behaviour. Clicking the X button or outside the modal
+  // content will close the event modal if it is open.
+  const closeBtn = document.getElementById('closeModalBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeEventModal);
+  }
+  const modalEl = document.getElementById('eventModal');
+  if (modalEl) {
+    modalEl.addEventListener('click', e => {
+      if (e.target === modalEl) {
+        closeEventModal();
+      }
+    });
+  }
 });
