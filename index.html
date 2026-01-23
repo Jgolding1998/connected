@@ -55,6 +55,12 @@
         <button id="filterRadiusBtn">Filter</button>
       </div>
       <div id="map" class="map-container">
+        <!-- Static world map image that forms the base of our custom map. This
+             element is sized to fill the container and ensures the world
+             outline is visible even before JavaScript runs. The interactive
+             map script positions markers over this image using absolute
+             positioning based on latitude/longitude. -->
+        <img id="worldMapImage" src="world_map_small.png" alt="World map" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
         <!-- Custom zoom controls for our client-side map -->
         <div id="mapControls" class="map-controls">
           <button id="zoomInBtn">+</button>
@@ -166,13 +172,10 @@
 
   <!-- External JS libraries -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- Leaflet JS for interactive maps -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha512-O8kEFVQVwJ0N+PtCbztqKqRR3YKHyCuXapnwYf5aqdK0kJOUFHHc4FQZxsK44Rr7O4HX04XeZQccgH4MrdAQ=="
-    crossorigin=""
-  ></script>
-      <!-- App script with version query to bust caches -->
-      <script src="script.js?v=8"></script>
+  <!-- App script with version query to bust caches -->
+  <!-- App script with version query to bust caches. Bump the version number
+       whenever script.js changes to force browsers to fetch the latest
+       version instead of using a cached copy. -->
+  <script src="script.js?v=9"></script>
 </body>
 </html>

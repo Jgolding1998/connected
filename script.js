@@ -203,8 +203,13 @@ let mapTranslateX = 0;
 let mapTranslateY = 0;
 // Dimensions of the source world map image. We resize the image to this size in index.html.
 // If you change the file used, update these values accordingly.
-const mapOriginalWidth = 1024;
-const mapOriginalHeight = 682;
+// Updated map dimensions to match the native resolution of the world map image. The
+// world_map_small.png included in this project is 768×512 pixels, so the
+// conversion routines use these values to correctly map latitude/longitude to
+// pixel positions. Adjust these constants if you replace the image with
+// another size.
+const mapOriginalWidth = 768;
+const mapOriginalHeight = 512;
 // A container div to hold event markers; created in initMap()
 let markerLayerDiv;
 // The underlying world map image element. Created in initMap().
@@ -226,11 +231,6 @@ function pixelToLatLon(x, y, width, height) {
 
 // Initialize the interactive Leaflet map and set up event listeners
 function initMap() {
-  // If Leaflet is available, initialise the interactive Leaflet map instead of the static implementation.
-  if (typeof L !== 'undefined') {
-    initMapLeaflet();
-    return;
-  }
   const mapContainer = document.getElementById('map');
   // Reset scale and translation for a fresh map
   mapScale = 1;
@@ -248,15 +248,12 @@ function initMap() {
   mapContainer.style.position = 'relative';
   mapContainer.style.cursor = 'grab';
 
-  // Create the base map image element and append it behind markers
-  baseMapImg = document.createElement('img');
-  baseMapImg.src = 'world_map_small.png';
-  baseMapImg.style.position = 'absolute';
-  baseMapImg.style.top = '0';
-  baseMapImg.style.left = '0';
-  baseMapImg.style.userSelect = 'none';
-  baseMapImg.draggable = false;
-  mapContainer.appendChild(baseMapImg);
+  // The world map image is now embedded directly in the HTML as #worldMapImage,
+  // so we no longer need to create and append a base map image here. The
+  // background image on the container is still set for browsers that do not
+  // support the <img> element or when JavaScript loads after the HTML. When
+  // updateMap() is called, markers are drawn over the image via the
+  // marker overlay.
 
   // Create an overlay for event markers
   markerLayerDiv = document.createElement('div');
@@ -386,9 +383,12 @@ function initMap() {
 
 // Place markers on the interactive map based on the provided events
 function updateMap(eventList = events) {
-  // Only proceed if a Leaflet map instance exists
-  if (!leafletMap) return;
-  // Determine which events to display; if using the global events array, apply radius filtering
+  // Ensure the marker overlay exists; if not, there's nothing to draw
+  if (!markerLayerDiv) return;
+  // Clear any existing markers before redrawing
+  markerLayerDiv.innerHTML = '';
+  // Determine which events to display. If the caller passed the global
+  // events array, apply a distance filter based on the current radius.
   let filtered = eventList;
   if (eventList === events) {
     const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
@@ -399,106 +399,45 @@ function updateMap(eventList = events) {
       );
     });
   }
-  // Remove any existing event layers or radius circle
-  if (eventLayerGroup) {
-    leafletMap.removeLayer(eventLayerGroup);
-  }
-  if (radiusCircle) {
-    leafletMap.removeLayer(radiusCircle);
-  }
-  // Update user marker position
-  if (userMarker) {
-    userMarker.setLatLng([currentLocation.lat, currentLocation.lon]);
-  }
-  // Draw radius circle around the current location
-  const radiusMeters = (parseFloat(document.getElementById('radiusInput').value) || 100) * 1609.34;
-  radiusCircle = L.circle([currentLocation.lat, currentLocation.lon], {
-    radius: radiusMeters,
-    color: '#5e84c8',
-    weight: 2,
-    fillColor: '#5e84c8',
-    fillOpacity: 0.1
-  }).addTo(leafletMap);
-  // Create a layer group for event markers
-  eventLayerGroup = L.layerGroup().addTo(leafletMap);
+  // Draw a marker indicating the current selected location
+  const centerPixel = latLonToPixel(
+    currentLocation.lat,
+    currentLocation.lon,
+    mapOriginalWidth,
+    mapOriginalHeight
+  );
+  const centerX = centerPixel.x * mapScale + mapTranslateX;
+  const centerY = centerPixel.y * mapScale + mapTranslateY;
+  createCenterMarker(centerX, centerY);
+  // Draw a radius circle around the current location by creating a semi-transparent
+  // DOM element. The circle's radius is converted from miles to pixels using a
+  // simple approximation: 1 degree of latitude is ~69 miles. This is
+  // sufficient for small radii (users typically choose a radius of 100 miles
+  // or less). If you need more accuracy, consider using a more precise
+  // projection formula.
+  const radiusMilesInput = parseFloat(document.getElementById('radiusInput').value) || 100;
+  const milesPerDegree = 69.0;
+  const radiusDegrees = radiusMilesInput / milesPerDegree;
+  const radiusPixels = (radiusDegrees * mapOriginalHeight) * mapScale;
+  const radiusDiv = document.createElement('div');
+  radiusDiv.style.position = 'absolute';
+  radiusDiv.style.width = `${radiusPixels * 2}px`;
+  radiusDiv.style.height = `${radiusPixels * 2}px`;
+  radiusDiv.style.left = `${centerX - radiusPixels}px`;
+  radiusDiv.style.top = `${centerY - radiusPixels}px`;
+  radiusDiv.style.border = '2px solid #5e84c8';
+  radiusDiv.style.borderRadius = '50%';
+  radiusDiv.style.backgroundColor = 'rgba(94, 132, 200, 0.1)';
+  // Use pointer-events: none so the circle doesn't intercept clicks or drags
+  radiusDiv.style.pointerEvents = 'none';
+  markerLayerDiv.appendChild(radiusDiv);
+  // Draw markers for each event in the filtered list
   filtered.forEach(ev => {
-    const marker = L.circleMarker([ev.lat, ev.lon], {
-      radius: 6,
-      color: '#00a9c4',
-      weight: 3,
-      fillColor: '#00a9c4',
-      fillOpacity: 1
-    });
-    marker.on('click', () => showEventModal(ev));
-    marker.addTo(eventLayerGroup);
+    const pixel = latLonToPixel(ev.lat, ev.lon, mapOriginalWidth, mapOriginalHeight);
+    const x = pixel.x * mapScale + mapTranslateX;
+    const y = pixel.y * mapScale + mapTranslateY;
+    createEventMarker(x, y, ev);
   });
-}
-
-// Initialize the Leaflet map with custom controls and event handling.
-function initMapLeaflet() {
-  const mapContainer = document.getElementById('map');
-  // Clean up any existing Leaflet map instance.
-  if (leafletMap) {
-    leafletMap.remove();
-  }
-  // Create a new Leaflet map centered on the current location.
-  leafletMap = L.map('map', {
-    zoomControl: false,
-    attributionControl: false
-  }).setView([currentLocation.lat, currentLocation.lon], 3);
-  // Use a dark base layer from Carto for visual appeal.
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(leafletMap);
-  // Add a marker to represent the user's chosen location.
-  userMarker = L.marker([currentLocation.lat, currentLocation.lon], {
-    icon: L.divIcon({
-      className: 'user-marker-icon',
-      html: '<div class="center-marker"></div>',
-      iconSize: [12, 12],
-      iconAnchor: [6, 6]
-    })
-  }).addTo(leafletMap);
-  // Wire up the zoom buttons to Leaflet's built-in zoom methods.
-  const zoomInBtn = document.getElementById('zoomInBtn');
-  const zoomOutBtn = document.getElementById('zoomOutBtn');
-  if (zoomInBtn && zoomOutBtn) {
-    zoomInBtn.onclick = () => leafletMap.zoomIn();
-    zoomOutBtn.onclick = () => leafletMap.zoomOut();
-  }
-  // When the map is clicked, update the current location and filter events.
-  leafletMap.on('click', e => {
-    currentLocation = { lat: e.latlng.lat, lon: e.latlng.lng };
-    const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
-    const filtered = events.filter(ev => {
-      return (
-        haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
-        radiusMiles
-      );
-    });
-    updateMap(filtered);
-    renderList(filtered);
-    updateCalendar(filtered);
-  });
-  // Hook up the radius filter button.
-  const radiusBtn = document.getElementById('filterRadiusBtn');
-  if (radiusBtn) {
-    radiusBtn.onclick = () => {
-      const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
-      const filtered = events.filter(ev => {
-        return (
-          haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
-          radiusMiles
-        );
-      });
-      updateMap(filtered);
-      renderList(filtered);
-      updateCalendar(filtered);
-    };
-  }
-  // Draw initial markers and radius circle.
-  updateMap();
 }
 
 // Helper function to create an event marker on the map overlay
