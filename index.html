@@ -10,10 +10,10 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
   />
-  <!-- Leaflet CSS removed – using a static world map with custom zoom controls -->
+  <!-- Leaflet CSS removed; the custom static map does not require external libraries. -->
 
   <!-- App main styles -->
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
   <!-- Header with navigation -->
@@ -160,8 +160,9 @@
 
   <!-- External JS libraries -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- Removed Leaflet JS since we implement our own map interactions -->
+  <!-- Leaflet JS removed; the custom static map does not require external libraries. -->
       <!-- App script with version query to bust caches -->
-      <script src="script.js?v=5"></script>
+      <!-- Update script version to bust caches. -->
+      <script src="script.js?v=7"></script>
 </body>
 </html>
