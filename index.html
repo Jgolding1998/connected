@@ -147,10 +147,21 @@
     </section>
   </main>
 
+  <!-- Event details modal for showing event information and reels -->
+  <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <span id="closeModalBtn" class="close">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <p id="modalMeta" class="modal-meta"></p>
+      <p id="modalDesc" class="modal-desc"></p>
+      <div id="modalReels" class="modal-reels"></div>
+    </div>
+  </div>
+
   <!-- External JS libraries -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <!-- Removed Leaflet JS since we implement our own map interactions -->
       <!-- App script with version query to bust caches -->
-      <script src="script.js?v=4"></script>
+      <script src="script.js?v=5"></script>
 </body>
 </html>
