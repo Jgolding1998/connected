@@ -542,8 +542,22 @@ function initChat() {
 document.addEventListener('DOMContentLoaded', () => {
   // Load any stored events or fall back to defaults
   loadEvents();
-  // Initialise the static map so markers can be drawn
-  initMap();
+  // Initialise the interactive map within a try/catch block. If the Leaflet
+  // library fails to load (for example, if the user is offline or the CDN
+  // hosting Leaflet is blocked), the exception will be caught and we will
+  // display a fallback message instead of stopping the entire script. This
+  // ensures the rest of the application (lists, calendar, profile, etc.)
+  // continues to function even without the map.
+  try {
+    initMap();
+  } catch (err) {
+    console.error('Map initialisation failed:', err);
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+      mapContainer.innerHTML =
+        '<p style="color: #ccc; padding: 1rem;">Interactive map could not be loaded. Please check your connection.</p>';
+    }
+  }
   // Initialise the calendar inside a try/catch block. If the FullCalendar
   // library fails to load for any reason, we still want the rest of the
   // application (navigation, list view, map, add events, etc.) to work.
