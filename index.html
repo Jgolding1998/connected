@@ -10,16 +10,10 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
   />
-  <!-- Leaflet CSS for interactive map -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha512-m6CZGtH0htPdvIdTOfLI1aaBhpcGl9vt8zw2fTdHrXaHOnbn4iOjdRJ02EzuO4YoQfpEZyavJ4wk3E5fWGjAUg=="
-    crossorigin=""
-  />
+  <!-- Leaflet CSS removed – using a static world map with custom zoom controls -->
 
   <!-- App main styles -->
-  <link rel="stylesheet" href="style.css?v=2" />
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <!-- Header with navigation -->
@@ -55,7 +49,11 @@
         <button id="filterRadiusBtn">Filter</button>
       </div>
       <div id="map" class="map-container">
-        <!-- Leaflet will populate this container with an interactive map -->
+        <!-- Custom zoom controls for our client-side map -->
+        <div id="mapControls" class="map-controls">
+          <button id="zoomInBtn">+</button>
+          <button id="zoomOutBtn">−</button>
+        </div>
       </div>
     </section>
 
@@ -151,13 +149,8 @@
 
   <!-- External JS libraries -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- Leaflet JS for interactive map -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha512-o9N1jSg9D1aKBGsKaXE+vSN0AsubOVFFG8EwM7DssgKklfB4Ub7ryYdEq4EOGksh59z9ZjjN9cG0Ci3fYvQ9IQ=="
-    crossorigin=""
-  ></script>
+  <!-- Removed Leaflet JS since we implement our own map interactions -->
       <!-- App script with version query to bust caches -->
-      <script src="script.js?v=3"></script>
+      <script src="script.js?v=4"></script>
 </body>
 </html>

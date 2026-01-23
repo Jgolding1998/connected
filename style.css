@@ -150,6 +150,31 @@ main {
   transform: translate(-50%, -50%);
 }
 
+/* Custom map controls for zooming */
+.map-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+
+.map-controls button {
+  background: var(--primary);
+  color: var(--text-light);
+  border: none;
+  padding: 4px 8px;
+  font-size: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.map-controls button:hover {
+  background: var(--secondary);
+}
+
  .controls {
   margin-bottom: 0.5rem;
   display: flex;

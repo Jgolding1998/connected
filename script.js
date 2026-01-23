@@ -179,11 +179,20 @@ let calendar;
 // Current selected location for radius filtering (default: Columbia, Missouri)
 let currentLocation = { lat: 38.9517, lon: -92.3341 };
 
-// Global map and layers used by Leaflet
-let map;
-let markerLayer;
-let centerMarker;
-let radiusLayer;
+// Variables to manage the custom interactive map
+// Scale factor for zooming (1 means the map is shown at its original size)
+let mapScale = 1;
+// Translation offsets for panning (in pixels)
+let mapTranslateX = 0;
+let mapTranslateY = 0;
+// Dimensions of the source world map image. We resize the image to this size in index.html.
+// If you change the file used, update these values accordingly.
+const mapOriginalWidth = 1024;
+const mapOriginalHeight = 682;
+// A container div to hold event markers; created in initMap()
+let markerLayerDiv;
+// The underlying world map image element. Created in initMap().
+let baseMapImg;
 
 // Convert latitude and longitude to pixel coordinates on the map image
 function latLonToPixel(lat, lon, width, height) {
@@ -202,88 +211,221 @@ function pixelToLatLon(x, y, width, height) {
 // Initialize the interactive Leaflet map and set up event listeners
 function initMap() {
   const mapContainer = document.getElementById('map');
-  // Remove any leftover static image in the container if present
-  const staticImg = document.getElementById('worldMapImage');
-  if (staticImg) {
-    staticImg.remove();
+  // Reset scale and translation for a fresh map
+  mapScale = 1;
+  mapTranslateX = 0;
+  mapTranslateY = 0;
+  // Remove any existing marker overlay but preserve controls inside the map container
+  if (markerLayerDiv && markerLayerDiv.parentNode) {
+    markerLayerDiv.parentNode.removeChild(markerLayerDiv);
   }
-  // Create the Leaflet map centered at the current location with a world view
-  map = L.map(mapContainer).setView([currentLocation.lat, currentLocation.lon], 2);
-  // Add a dark tile layer (CartoDB dark matter)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 18,
-    attribution:
-      '&copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
-  }).addTo(map);
-  // Handle click on the map to update the selected location and filter events
-  map.on('click', e => {
-    currentLocation = { lat: e.latlng.lat, lon: e.latlng.lng };
-    const radius = parseFloat(document.getElementById('radiusInput').value) || 100;
+  // Configure the map container to display the world map image
+  mapContainer.style.backgroundImage = "url('world_map_small.png')";
+  mapContainer.style.backgroundSize = `${mapOriginalWidth * mapScale}px ${mapOriginalHeight * mapScale}px`;
+  mapContainer.style.backgroundPosition = `${mapTranslateX}px ${mapTranslateY}px`;
+  mapContainer.style.backgroundRepeat = 'no-repeat';
+  mapContainer.style.position = 'relative';
+  mapContainer.style.cursor = 'grab';
+
+  // Create the base map image element and append it behind markers
+  baseMapImg = document.createElement('img');
+  baseMapImg.src = 'world_map_small.png';
+  baseMapImg.style.position = 'absolute';
+  baseMapImg.style.top = '0';
+  baseMapImg.style.left = '0';
+  baseMapImg.style.userSelect = 'none';
+  baseMapImg.draggable = false;
+  mapContainer.appendChild(baseMapImg);
+
+  // Create an overlay for event markers
+  markerLayerDiv = document.createElement('div');
+  markerLayerDiv.style.position = 'absolute';
+  markerLayerDiv.style.top = '0';
+  markerLayerDiv.style.left = '0';
+  markerLayerDiv.style.width = '100%';
+  markerLayerDiv.style.height = '100%';
+  // Do not capture pointer events on the overlay so dragging works properly
+  markerLayerDiv.style.pointerEvents = 'none';
+  mapContainer.appendChild(markerLayerDiv);
+
+  // Set up zoom button handlers
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  if (zoomInBtn && zoomOutBtn) {
+    zoomInBtn.onclick = () => {
+      mapScale = Math.min(mapScale * 1.5, 8);
+      updateMap();
+    };
+    zoomOutBtn.onclick = () => {
+      mapScale = Math.max(mapScale / 1.5, 0.5);
+      updateMap();
+    };
+  }
+
+  // Setup dragging for panning
+  let dragging = false;
+  let lastX = 0;
+  let lastY = 0;
+  mapContainer.addEventListener('mousedown', e => {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    mapContainer.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', e => {
+    if (dragging) {
+      mapTranslateX += e.clientX - lastX;
+      mapTranslateY += e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      updateMap();
+    }
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragging) {
+      dragging = false;
+      mapContainer.style.cursor = 'grab';
+    }
+  });
+  // Touch dragging for mobile devices
+  mapContainer.addEventListener(
+    'touchstart',
+    e => {
+      if (e.touches.length === 1) {
+        dragging = true;
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      }
+    },
+    { passive: true }
+  );
+  mapContainer.addEventListener(
+    'touchmove',
+    e => {
+      if (dragging && e.touches.length === 1) {
+        const touch = e.touches[0];
+        mapTranslateX += touch.clientX - lastX;
+        mapTranslateY += touch.clientY - lastY;
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+        updateMap();
+      }
+    },
+    { passive: true }
+  );
+  mapContainer.addEventListener('touchend', () => {
+    dragging = false;
+  });
+
+  // Attach the radius filter button to update map, list and calendar
+  const radiusBtn = document.getElementById('filterRadiusBtn');
+  if (radiusBtn) {
+    radiusBtn.onclick = () => {
+      const radius = parseFloat(document.getElementById('radiusInput').value) || 100;
+      const filtered = events.filter(ev => {
+        return (
+          haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
+          radius
+        );
+      });
+      updateMap(filtered);
+      renderList(filtered);
+      updateCalendar(filtered);
+    };
+  }
+
+  // When the user clicks on the map, update the current location based on the clicked point.
+  mapContainer.addEventListener('click', e => {
+    // Ignore if the click originated from the zoom buttons (which are inside the map container)
+    const targetId = e.target.id;
+    if (targetId === 'zoomInBtn' || targetId === 'zoomOutBtn') return;
+    const rect = mapContainer.getBoundingClientRect();
+    // Compute coordinates relative to the map image, removing translation and scaling
+    const xRelative = (e.clientX - rect.left - mapTranslateX) / mapScale;
+    const yRelative = (e.clientY - rect.top - mapTranslateY) / mapScale;
+    // Convert to latitude and longitude
+    const latLon = pixelToLatLon(xRelative, yRelative, mapOriginalWidth, mapOriginalHeight);
+    currentLocation = { lat: latLon.lat, lon: latLon.lon };
+    // Apply radius filtering and update all views
+    const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
     const filtered = events.filter(ev => {
       return (
         haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
-        radius
+        radiusMiles
       );
     });
     updateMap(filtered);
     renderList(filtered);
     updateCalendar(filtered);
   });
-  // Set up the radius filter button
-  document.getElementById('filterRadiusBtn').addEventListener('click', () => {
-    const radius = parseFloat(document.getElementById('radiusInput').value) || 100;
-    const filtered = events.filter(ev => {
-      return (
-        haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
-        radius
-      );
-    });
-    updateMap(filtered);
-    renderList(filtered);
-    updateCalendar(filtered);
-  });
-  // Draw initial markers
+
+  // Initial draw of the map and markers
   updateMap();
 }
 
 // Place markers on the interactive map based on the provided events
 function updateMap(eventList = events) {
-  // Ensure the map is initialised
-  if (!map) return;
-  // Remove existing marker layer and radius indicators
-  if (markerLayer) {
-    markerLayer.remove();
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  // Update base map image dimensions and position according to current scale and translation
+  if (baseMapImg) {
+    baseMapImg.style.width = `${mapOriginalWidth * mapScale}px`;
+    baseMapImg.style.height = `${mapOriginalHeight * mapScale}px`;
+    baseMapImg.style.transform = `translate(${mapTranslateX}px, ${mapTranslateY}px)`;
   }
-  if (centerMarker) {
-    centerMarker.remove();
+  // Determine which events should be displayed. If eventList is the global events array, apply radius filtering.
+  let filtered = eventList;
+  if (eventList === events) {
+    const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
+    filtered = events.filter(ev => {
+      return (
+        haversineDistance(currentLocation.lat, currentLocation.lon, ev.lat, ev.lon) <=
+        radiusMiles
+      );
+    });
   }
-  if (radiusLayer) {
-    radiusLayer.remove();
-  }
-  // Create a new marker layer
-  markerLayer = L.layerGroup().addTo(map);
-  // Add a marker for the current selected location
-  centerMarker = L.circleMarker([currentLocation.lat, currentLocation.lon], {
-    radius: 8,
-    color: '#00a9c4',
-    fillColor: '#0b3556',
-    fillOpacity: 1
-  }).addTo(map);
-  // Draw radius circle to visualise the filter range
-  const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
-  const radiusMeters = radiusMiles * 1609.34;
-  radiusLayer = L.circle([currentLocation.lat, currentLocation.lon], {
-    radius: radiusMeters,
-    color: '#5e84c8',
-    fill: false
-  }).addTo(map);
-  // Add event markers with popups
-  eventList.forEach(ev => {
-    const marker = L.marker([ev.lat, ev.lon]).addTo(markerLayer);
-    marker.bindPopup(
-      `<strong>${ev.title}</strong><br>${new Date(ev.date).toLocaleString()}<br>${ev.city}`
+  // Ensure marker overlay exists
+  if (!markerLayerDiv) return;
+  // Clear existing markers
+  markerLayerDiv.innerHTML = '';
+  // Draw marker for current selected location
+  const centerX = ((currentLocation.lon + 180) / 360) * mapOriginalWidth * mapScale + mapTranslateX;
+  const centerY = ((90 - currentLocation.lat) / 180) * mapOriginalHeight * mapScale + mapTranslateY;
+  createCenterMarker(centerX, centerY);
+  // Draw markers for each event in the filtered list
+  filtered.forEach(ev => {
+    const x = ((ev.lon + 180) / 360) * mapOriginalWidth * mapScale + mapTranslateX;
+    const y = ((90 - ev.lat) / 180) * mapOriginalHeight * mapScale + mapTranslateY;
+    createEventMarker(x, y, ev);
+  });
+}
+
+// Helper function to create an event marker on the map overlay
+function createEventMarker(x, y, ev) {
+  const marker = document.createElement('div');
+  marker.className = 'map-marker';
+  marker.style.position = 'absolute';
+  marker.style.left = `${x}px`;
+  marker.style.top = `${y}px`;
+  marker.title = `${ev.title} - ${new Date(ev.date).toLocaleString()}`;
+  marker.addEventListener('click', () => {
+    alert(
+      `${ev.title}\n\n${ev.description}\nLocation: ${ev.city}\nDate: ${new Date(
+        ev.date
+      ).toLocaleString()}`
     );
   });
+  markerLayerDiv.appendChild(marker);
+}
+
+// Helper function to create the marker for the current selected location
+function createCenterMarker(x, y) {
+  const marker = document.createElement('div');
+  marker.className = 'center-marker';
+  marker.style.position = 'absolute';
+  marker.style.left = `${x}px`;
+  marker.style.top = `${y}px`;
+  markerLayerDiv.appendChild(marker);
 }
 
 // Initialize the FullCalendar and populate events
@@ -542,12 +684,11 @@ function initChat() {
 document.addEventListener('DOMContentLoaded', () => {
   // Load any stored events or fall back to defaults
   loadEvents();
-  // Initialise the interactive map within a try/catch block. If the Leaflet
-  // library fails to load (for example, if the user is offline or the CDN
-  // hosting Leaflet is blocked), the exception will be caught and we will
-  // display a fallback message instead of stopping the entire script. This
-  // ensures the rest of the application (lists, calendar, profile, etc.)
-  // continues to function even without the map.
+  // Initialise the interactive map within a try/catch block. If any
+  // unexpected error occurs during initialisation, we catch it so that
+  // the rest of the application (lists, calendar, profile, etc.)
+  // can continue functioning. Our map implementation no longer relies on
+  // external libraries like Leaflet, so this is mainly a precaution.
   try {
     initMap();
   } catch (err) {
