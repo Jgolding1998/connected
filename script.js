@@ -381,15 +381,9 @@ function initMap() {
 
 // Place markers on the interactive map based on the provided events
 function updateMap(eventList = events) {
-  const mapContainer = document.getElementById('map');
-  if (!mapContainer) return;
-  // Update base map image dimensions and position according to current scale and translation
-  if (baseMapImg) {
-    baseMapImg.style.width = `${mapOriginalWidth * mapScale}px`;
-    baseMapImg.style.height = `${mapOriginalHeight * mapScale}px`;
-    baseMapImg.style.transform = `translate(${mapTranslateX}px, ${mapTranslateY}px)`;
-  }
-  // Determine which events should be displayed. If eventList is the global events array, apply radius filtering.
+  // Only proceed if a Leaflet map instance exists
+  if (!leafletMap) return;
+  // Determine which events to display; if using the global events array, apply radius filtering
   let filtered = eventList;
   if (eventList === events) {
     const radiusMiles = parseFloat(document.getElementById('radiusInput').value) || 100;
@@ -400,19 +394,38 @@ function updateMap(eventList = events) {
       );
     });
   }
-  // Ensure marker overlay exists
-  if (!markerLayerDiv) return;
-  // Clear existing markers
-  markerLayerDiv.innerHTML = '';
-  // Draw marker for current selected location
-  const centerX = ((currentLocation.lon + 180) / 360) * mapOriginalWidth * mapScale + mapTranslateX;
-  const centerY = ((90 - currentLocation.lat) / 180) * mapOriginalHeight * mapScale + mapTranslateY;
-  createCenterMarker(centerX, centerY);
-  // Draw markers for each event in the filtered list
+  // Remove any existing event layers or radius circle
+  if (eventLayerGroup) {
+    leafletMap.removeLayer(eventLayerGroup);
+  }
+  if (radiusCircle) {
+    leafletMap.removeLayer(radiusCircle);
+  }
+  // Update user marker position
+  if (userMarker) {
+    userMarker.setLatLng([currentLocation.lat, currentLocation.lon]);
+  }
+  // Draw radius circle around the current location
+  const radiusMeters = (parseFloat(document.getElementById('radiusInput').value) || 100) * 1609.34;
+  radiusCircle = L.circle([currentLocation.lat, currentLocation.lon], {
+    radius: radiusMeters,
+    color: '#5e84c8',
+    weight: 2,
+    fillColor: '#5e84c8',
+    fillOpacity: 0.1
+  }).addTo(leafletMap);
+  // Create a layer group for event markers
+  eventLayerGroup = L.layerGroup().addTo(leafletMap);
   filtered.forEach(ev => {
-    const x = ((ev.lon + 180) / 360) * mapOriginalWidth * mapScale + mapTranslateX;
-    const y = ((90 - ev.lat) / 180) * mapOriginalHeight * mapScale + mapTranslateY;
-    createEventMarker(x, y, ev);
+    const marker = L.circleMarker([ev.lat, ev.lon], {
+      radius: 6,
+      color: '#00a9c4',
+      weight: 3,
+      fillColor: '#00a9c4',
+      fillOpacity: 1
+    });
+    marker.on('click', () => showEventModal(ev));
+    marker.addTo(eventLayerGroup);
   });
 }
 

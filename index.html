@@ -10,7 +10,13 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"
   />
-  <!-- Leaflet CSS removed – using a static world map with custom zoom controls -->
+  <!-- Leaflet CSS for interactive map -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""
+  />
 
   <!-- App main styles -->
   <link rel="stylesheet" href="style.css?v=3" />
@@ -160,8 +166,13 @@
 
   <!-- External JS libraries -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-  <!-- Removed Leaflet JS since we implement our own map interactions -->
+  <!-- Leaflet JS for interactive maps -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha512-O8kEFVQVwJ0N+PtCbztqKqRR3YKHyCuXapnwYf5aqdK0kJOUFHHc4FQZxsK44Rr7O4HX04XeZQccgH4MrdAQ=="
+    crossorigin=""
+  ></script>
       <!-- App script with version query to bust caches -->
-      <script src="script.js?v=5"></script>
+      <script src="script.js?v=6"></script>
 </body>
 </html>
